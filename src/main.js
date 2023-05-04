@@ -1,20 +1,34 @@
-import Web3 from "web3"
-import { newKitFromWeb3 } from "@celo/contractkit"
+import { ChainId, Token, TokenAmount, Pair, Trade, TradeType, Route } from '@uniswap/sdk'
+import Web3 from 'web3'
+import { newKitFromWeb3 } from '@celo/contractkit'
 import BigNumber from "bignumber.js"
-import marketplaceAbi from "../contract/marketplace.abi.json"
+import marketplaceAbi from '../contract/marketplace.abi.json'
 import erc20Abi from "../contract/erc20.abi.json"
 
 const ERC20_DECIMALS = 18
-const MPContractAddress = "0xE1ea345FEeA9401C0f3E7593092436D4703ACB8a"
+const APaddress = "0x59f1C78B8CEbf6cb4c8734775"
 const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"
 
 let kit
 let contract
-let products = []
+let Assignments
+let Submissions
+let Workers
+
+
+
+const _Assignments = []
+const _Workers =[]
+const _Submissions = []
+
+
+
+
+
 
 const connectCeloWallet = async function () {
   if (window.celo) {
-    notification("⚠️ Please approve this DApp to use it.")
+      notification("⚠️ Please approve this DApp to use it.")
     try {
       await window.celo.enable()
       notificationOff()
@@ -24,8 +38,8 @@ const connectCeloWallet = async function () {
 
       const accounts = await kit.web3.eth.getAccounts()
       kit.defaultAccount = accounts[0]
+      contract = new kit.web3.eth.Contract(marketplaceAbi, APAddress)
 
-      contract = new kit.web3.eth.Contract(marketplaceAbi, MPContractAddress)
     } catch (error) {
       notification(`⚠️ ${error}.`)
     }
@@ -38,80 +52,214 @@ async function approve(_price) {
   const cUSDContract = new kit.web3.eth.Contract(erc20Abi, cUSDContractAddress)
 
   const result = await cUSDContract.methods
-    .approve(MPContractAddress, _price)
+    .approve(APContractAddress, _price)
     .send({ from: kit.defaultAccount })
   return result
 }
 
 const getBalance = async function () {
-  const totalBalance = await kit.getTotalBalance(kit.defaultAccount)
-  const cUSDBalance = totalBalance.cUSD.shiftedBy(-ERC20_DECIMALS).toFixed(2)
-  document.querySelector("#balance").textContent = cUSDBalance
+    const totalBalance = await kit.getTotalBalance(kit.defaultAccount)
+    const cUSDBalance = totalBalance.cUSD.shiftedBy(-ERC20_DECIMALS).toFixed(2)
+    document.querySelector("#balance").textContent = cUSDBalance
 }
 
-const getProducts = async function() {
-  const _productsLength = await contract.methods.getProductsLength().call()
-  const _products = []
-  for (let i = 0; i < _productsLength; i++) {
-    let _product = new Promise(async (resolve, reject) => {
-      let p = await contract.methods.readProduct(i).call()
+const getAssignments = async function() {
+  const _AssignmentSize = await contract.methods.getAssignmentsToDoSize().call()
+
+  for(let i =0; i< _AssignmentSize; i++){
+    let _data = new Promise(async (resolve,reject) =>{
+      let p =await contract.methods.GetAssignment(i).call()
       resolve({
         index: i,
-        owner: p[0],
-        name: p[1],
-        image: p[2],
-        description: p[3],
-        location: p[4],
-        price: new BigNumber(p[5]),
-        sold: p[6],
+        Employer:p[0],
+        BestSubimitter: p[1],
+        name: p[2],
+        image: p[3],
+        Assignmentdescription: p[4],
+        BestSubmission: p[5],
+        price: new BigNumber(p[6]),
+        SubmissionCount : p[7]
       })
     })
-    _products.push(_product)
+    _Assignments.push(_data)
   }
-  products = await Promise.all(_products)
-  renderProducts()
+
+  Assignments = await Promise.all(_Assignments)
+  renderAssignments()
 }
 
-function renderProducts() {
-  document.getElementById("marketplace").innerHTML = ""
-  products.forEach((_product) => {
-    const newDiv = document.createElement("div")
-    newDiv.className = "col-md-4"
-    newDiv.innerHTML = productTemplate(_product)
-    document.getElementById("marketplace").appendChild(newDiv)
-  })
+const getSubmissions = async function(_index) {
+  const _SubmissionSize = await contract.methods.getSubmissionsSize(_index).call()
+
+  for(let i =0; i< _SubmissionSize; i++){
+    let _data = new Promise(async (resolve,reject) =>{
+      let p =await contract.methods.GetSubmission(_index,i).call()
+      resolve({
+        AssignmentIndex: _index,
+        Subindex: i,
+        submission: p[0],
+        submitter: p[1]
+      })
+    })
+    _Submissions.push(_data)
+  }
+
+  Submissions = await Promise.all(_Submissions)
+  renderSubmissions()
 }
 
-function productTemplate(_product) {
-  return `
-    <div class="card mb-4">
-      <img class="card-img-top" src="${_product.image}" alt="...">
-      <div class="position-absolute top-0 end-0 bg-warning mt-4 px-2 py-1 rounded-start">
-        ${_product.sold} Sold
-      </div>
-      <div class="card-body text-left p-4 position-relative">
+const getWorkers = async function() {
+  const _WorkersSize = await contract.methods.getworkersSize().call()
+
+  for(let i =0; i< _WorkersSize; i++){
+    let _data = new Promise(async (resolve,reject) =>{
+      let p =await contract.methods.GetWorkerInfo(i).call()
+      resolve({
+        index: i,
+        worker:p[0],
+        name: p[1],
+        image : p[2],
+        description: p[3],
+        AssignmentsDone: p[4]
+      })
+    })
+    _Workers.push(_data)
+  }
+
+  Workers = await Promise.all(_Workers)
+  renderWorkers()
+}
+
+getAssignments()
+
+function renderAssignments(Assignments) {
+    document.getElementById("Art Place").innerHTML = ""
+    Assignments.forEach((_assignment) => {
+      const newDiv = document.createElement("div")
+      newDiv.className = "col-md-4"
+      newDiv.innerHTML = AssignmentTemplate(_assignment)
+      document.getElementById("Art Place").appendChild(newDiv)
+    })
+}
+
+getSubmissions(_index)
+function renderSubmissions(Submissions) {
+    document.getElementById("Art Place").innerHTML = ""
+    Submissions.forEach((_Submission) => {
+      const newDiv = document.createElement("div")
+      newDiv.className = "col-md-4"
+      newDiv.innerHTML = SubmissionTemplate(_Submission)
+      document.getElementById("Art Place").appendChild(newDiv)
+    })
+}
+
+getWorkers ()
+function renderWorkers(Workers) {
+    document.getElementById("Data Market").innerHTML = ""
+    Workers.forEach((_Worker) => {
+      const newDiv = document.createElement("div")
+      newDiv.className = "col-md-4"
+      newDiv.innerHTML = WorkerTemplate(_Worker)
+      document.getElementById("Art Place").appendChild(newDiv)
+    })
+}
+
+
+
+  function AssignmentTemplate(_product) {
+    return `
+      <div class="card mb-4">
+        <img class="card-img-top" src="${_product.image}" alt="...">
+        </div>
+        <div class="card-body text-left p-4 position-relative">
         <div class="translate-middle-y position-absolute top-0">
-        ${identiconTemplate(_product.owner)}
+        ${identiconTemplate(_product.Employer)}
         </div>
         <h2 class="card-title fs-4 fw-bold mt-2">${_product.name}</h2>
         <p class="card-text mb-4" style="min-height: 82px">
-          ${_product.description}             
+          ${_product.Assignmentdescription}             
         </p>
         <p class="card-text mt-4">
           <i class="bi bi-geo-alt-fill"></i>
-          <span>${_product.location}</span>
+          <span>${_product.name}</span>
+        </p>
+        <p class="card-text mt-4">
+          <i class="bi bi-geo-alt-fill"></i>
+          <span>${_product.BestSubmission}</span>
+        </p>
+        <p class="card-text mt-4">
+          <i class="bi bi-geo-alt-fill"></i>
+          <span>${_product.BestSubmitter}</span>
+        </p>
+        <p class="card-text mt-4">
+          <i class="bi bi-geo-alt-fill"></i>
+          <span> Total Submissions ${_product.SubmissionCount}</span>
         </p>
         <div class="d-grid gap-2">
-          <a class="btn btn-lg btn-outline-dark buyBtn fs-6 p-3" id=${
-            _product.index
-          }>
-            Buy for ${_product.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD
+          <a class="btn btn-lg btn-outline-dark fs-6 p-3" id=${
+            _product.index}
+          data-bs-toggle="modal"
+          data-bs-target="#addModal1"
+          >
+            Add submission and earn ${_product.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD
           </a>
-        </div>
+        </div><div class="d-grid gap-2">
+        <a class="btn btn-lg btn-outline-dark viewsubmissions fs-6 p-3" id=${
+          _product.index}
+        >
+          View Submissions 
+        </a>
+      </div>
+
       </div>
     </div>
   `
 }
+
+function  WorkerTemplate(_Worker) {
+  return `
+    <div class="card mb-4">
+      <img class="card-img-top" src="${_Worker.image}" alt="...">
+      </div>
+      <div class="card-body text-left p-4 position-relative">
+      <div class="translate-middle-y position-absolute top-0">
+      ${identiconTemplate(_Worker.Worker)}
+      </div>
+      <h2 class="card-title fs-4 fw-bold mt-2">${_Worker.name}</h2>
+      <p class="card-text mb-4" style="min-height: 82px">
+        ${_Worker.description}             
+      </p>
+      <p class="card-text mt-4">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span> Total Assignments ${_Worker.AssignmentsDone}</span>
+      </p>
+    </div>
+  </div>
+`
+}  
+
+function SubmissionTemplate(_Submission) {
+  return `
+    <div class="card-body text-left p-4 position-relative">
+      <div class="translate-middle-y position-absolute top-0">
+      ${identiconTemplate(_Submission.submitter)}
+      </div>
+      <p class="card-text mb-4" style="min-height: 82px">
+        ${_Submission.submission}             
+      </p> 
+    </div>
+    <div class="d-grid gap-2">
+      <a class="btn btn-lg btn-outline-dark AwardSubmitBtn fs-6 p-3" id=${
+        _Submission.AssignmentIndex, _Submission.Subindex}
+      >
+      Award Submission ${_product.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD
+      </a>
+    </div>
+  </div>
+`
+}
+
+
 
 function identiconTemplate(_address) {
   const icon = blockies
@@ -144,54 +292,112 @@ function notificationOff() {
 window.addEventListener("load", async () => {
   notification("⌛ Loading...")
   await connectCeloWallet()
-  await getBalance()
-  await getProducts()
+  getBalance()
+  renderAssignments()
   notificationOff()
-});
+})
 
 document
-  .querySelector("#newProductBtn")
-  .addEventListener("click", async (e) => {
+  .querySelector("#newAssignmentBtn")
+  .addEventListener("click", async () => {
     const params = [
-      document.getElementById("newProductName").value,
+      document.getElementById("newAssignmentName").value,
       document.getElementById("newImgUrl").value,
-      document.getElementById("newProductDescription").value,
-      document.getElementById("newLocation").value,
+      document.getElementById("newAssignmentDescription").value,
       new BigNumber(document.getElementById("newPrice").value)
       .shiftedBy(ERC20_DECIMALS)
       .toString()
     ]
     notification(`⌛ Adding "${params[0]}"...`)
+    notification("⌛ Waiting for payment approval...")
+        try {
+          await approve(new BigNumber(document.getElementById("newPrice").value)
+          .shiftedBy(ERC20_DECIMALS)
+          .toString())
+        } catch (error) {
+          notification(`⚠️ ${error}.`)
+        }
+        notification(`⌛ Awaiting payment of prize for "${Assignments[index].name}"...`)
+
     try {
-      const result = await contract.methods
-        .writeProduct(...params)
+      const result1 = await contract.methods
+        .Addassignment(...params)
         .send({ from: kit.defaultAccount })
     } catch (error) {
       notification(`⚠️ ${error}.`)
     }
     notification(`🎉 You successfully added "${params[0]}".`)
-    getProducts()
+    getAssignments()
   })
 
-  document.querySelector("#marketplace").addEventListener("click", async (e) => {
-    if (e.target.className.includes("buyBtn")) {
-      const index = e.target.id
-      notification("⌛ Waiting for payment approval...")
-      try {
-        await approve(products[index].price)
-      } catch (error) {
-        notification(`⚠️ ${error}.`)
-      }
-      notification(`⌛ Awaiting payment for "${products[index].name}"...`)
-      try {
-        const result = await contract.methods
-          .buyProduct(index)
-          .send({ from: kit.defaultAccount })
-        notification(`🎉 You successfully bought "${products[index].name}".`)
-        getProducts()
-        getBalance()
-      } catch (error) {
-        notification(`⚠️ ${error}.`)
-      }
+  document
+  .querySelector("#newSubmissionBtn")
+  .addEventListener("click", async () => {
+    const index = e.target.id
+    const params = [
+      document.getElementById("newPieceName").value,
+      document.getElementById("newSubmission").value,
+    ]
+    
+    try {
+      const result = await contract.methods
+        .SubmitWork(index,...params)
+        .send({ from: kit.defaultAccount })
+    } catch (error) {
+      notification(`⚠️ ${error}.`)
     }
-  })  
+    notification(`🎉 You successfully added "${params[0]}".`)
+    getSubmissions()
+  })
+
+  document
+  .querySelector("#newWorkerBtn")
+  .addEventListener("click", async () => {
+    const params = [
+      document.getElementById("newWorkerName").value,
+      document.getElementById("newWorkerImgUrl").value,
+      document.getElementById("newWorkerDescription").value,
+    ]
+    
+    try {
+      const result = await contract.methods
+        .AddtoWorkforce(...params)
+        .send({ from: kit.defaultAccount })
+    } catch (error) {
+      notification(`⚠️ ${error}.`)
+    }
+    notification(`🎉 You successfully added "${params[0]}".`)
+    getWorkers()
+  })
+
+  document.querySelector("#Art Place").addEventListener("click", async (e) => {
+    if(e.target.className.includes("AwardSubmitBtn")) {
+      const index = e.target.id
+      if (_Assignments[index[0]].Assignmentdescription != ""){
+        try {
+        const result = await contract.methods
+          .SetBestSubmission(index[0],index[1])
+          .send({ from: kit.defaultAccount })
+          await approve(new BigNumber(_Assignments[index[0]].price)
+          .shiftedBy(ERC20_DECIMALS)
+          .toString())
+          await contract.methods.award(index[0])
+          notification(`🎉 You successfully awarded "${_Assignments[index[0]].Best.BestSubimitter}".`)
+          getSubmissions()
+          getBalance()
+          } catch (error) {
+            notification(`⚠️ ${error}.`)
+          }
+      }
+      
+    }
+
+    document.querySelector("#Art Place").addEventListener("click", async (e) => {
+      if(e.target.className.includes("viewsubmissions")) {
+        const index = e.target.id
+        if (_Assignments[index].Assignmentdescription != ""){
+          getSubmissions(index)
+        }
+      }
+    })
+  })
