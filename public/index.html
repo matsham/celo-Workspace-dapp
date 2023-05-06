@@ -45,14 +45,42 @@
 		}
 	  }
 	</style>
-  <title>DE LOUVRE</title>
+  <title>Work Space</title>
 	</head>
   <body>
     <div class="container mt-2" style="max-width: 72em">
 
       <nav class="navbar bg-white navbar-light">
         <div class="container-fluid">
-          <span class="navbar-brand m-0 h4 fw-bold">Art Place</span>
+          <span class="navbar-brand m-0 h4 fw-bold">Work Place</span>
+          <div class="mb-4" style="margin-top: 4em">
+            <a
+              class="btn btn-dark rounded-pill"
+              data-bs-toggle="modal"
+              data-bs-target="#addModal"
+            >
+              Add Assignment
+            </a>
+            <a
+              class="btn btn-dark rounded-pill"
+              data-bs-toggle="modal"
+              data-bs-target="#addModal2"
+            >
+              Add Worker
+            </a>
+            <a
+              class="btn btn-dark rounded-pill"
+              id = "AssignmentRender"
+            >
+              Assignments
+            </a>
+            <a
+              class="btn btn-dark rounded-pill"
+              id= "WorkerRender"
+            >
+              Workers
+            </a>
+          </div>
           <span class="nav-link border rounded-pill bg-light">
             <span id="balance">0</span>
             cUSD
@@ -63,32 +91,17 @@
         <span id="notification">⌛ Loading...</span>
       </div>
     </div>  
-  <div class="mb-4" style="margin-top: 4em">
-    <a
-      class="btn btn-dark rounded-pill"
-      data-bs-toggle="modal"
-      data-bs-target="#addModal"
-    >
-      Add Assignment
-    </a>
-  </div>
-  <div class="mb-4" style="margin-top: 4em">
-    <a
-      class="btn btn-dark rounded-pill"
-      data-bs-toggle="modal"
-      data-bs-target="#addModal2"
-    >
-      Add Worker
-    </a>
-  </div>
   <main id="Art Place" class="row"></main>
 </div>
+
+
+
 <!--Modal-->
 <div
   class="modal fade"
   id="addModal"
   tabindex="-1"
-  aria-labelledby="newPieceModalLabel"
+  aria-labelledby="newAssignmentModalLabel"
   aria-hidden="true"
 >
   <div class="modal-dialog">
@@ -101,7 +114,7 @@
 		      class="btn-close"
 		      data-bs-dismiss="modal"
 		      aria-label="Close"
-		    > Add Assignment</button>
+		    ></button>
 	    </div>
       <div class="modal-body">
         <form>
@@ -160,25 +173,27 @@
   </div>
 </div>
 
+
+
 <!--Modal-->
 <div
   class="modal fade"
-  id="addModal1"
+  id="addModal2"
   tabindex="-1"
-  aria-labelledby="newPieceModalLabel"
+  aria-labelledby="newWorkerModalLabel"
   aria-hidden="true"
 >
   <div class="modal-dialog">
 	  <div class="modal-content">
 
 	    <div class="modal-header">
-		    <h5 class="modal-title" id="newProductModalLabel">New Assignment</h5>
+		    <h5 class="modal-title" id="newProductModalLabel">New Worker</h5>
 		    <button
 		      type="button"
 		      class="btn-close"
 		      data-bs-dismiss="modal"
 		      aria-label="Close"
-		    > Add Worker </button>
+		    ></button>
 	    </div>
       <div class="modal-body">
         <form>
@@ -229,25 +244,26 @@
   </div>
 </div>
 
+
 <!--Modal-->
 <div
   class="modal fade"
-  id="addModal1 "
+  id="addModal1"
   tabindex="-1"
-  aria-labelledby="newPieceModalLabel"
+  aria-labelledby="newSubmissionModalLabel"
   aria-hidden="true"
 >
   <div class="modal-dialog">
 	  <div class="modal-content">
 
 	    <div class="modal-header">
-		    <h5 class="modal-title" id="newProductModalLabel">New Assignment</h5>
+		    <h5 class="modal-title" id="newProductModalLabel">New Submission</h5>
 		    <button
 		      type="button"
 		      class="btn-close"
 		      data-bs-dismiss="modal"
 		      aria-label="Close"
-		    > Add Submission </button>
+		    ></button>
 	    </div>
       <div class="modal-body">
         <form>

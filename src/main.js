@@ -1,12 +1,12 @@
-import { ChainId, Token, TokenAmount, Pair, Trade, TradeType, Route } from '@uniswap/sdk'
+//import { ChainId, Token, TokenAmount, Pair, Trade, TradeType, Route } from '@uniswap/sdk'
 import Web3 from 'web3'
 import { newKitFromWeb3 } from '@celo/contractkit'
 import BigNumber from "bignumber.js"
-import marketplaceAbi from '../contract/marketplace.abi.json'
+import WorkplaceAbi from '../contract/Workplace.abi.json'
 import erc20Abi from "../contract/erc20.abi.json"
 
 const ERC20_DECIMALS = 18
-const APaddress = "0x59f1C78B8CEbf6cb4c8734775"
+const APaddress = "0x5930E29c005052f1d27BefB216bc2Ce0D34a2f72"
 const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"
 
 let kit
@@ -38,7 +38,7 @@ const connectCeloWallet = async function () {
 
       const accounts = await kit.web3.eth.getAccounts()
       kit.defaultAccount = accounts[0]
-      contract = new kit.web3.eth.Contract(marketplaceAbi, APAddress)
+      contract = new kit.web3.eth.Contract(WorkplaceAbi, APaddress)
 
     } catch (error) {
       notification(`⚠️ ${error}.`)
@@ -52,7 +52,7 @@ async function approve(_price) {
   const cUSDContract = new kit.web3.eth.Contract(erc20Abi, cUSDContractAddress)
 
   const result = await cUSDContract.methods
-    .approve(APContractAddress, _price)
+    .approve(APaddress, _price)
     .send({ from: kit.defaultAccount })
   return result
 }
@@ -130,9 +130,9 @@ const getWorkers = async function() {
   renderWorkers()
 }
 
-getAssignments()
 
-function renderAssignments(Assignments) {
+
+function renderAssignments() {
     document.getElementById("Art Place").innerHTML = ""
     Assignments.forEach((_assignment) => {
       const newDiv = document.createElement("div")
@@ -140,10 +140,10 @@ function renderAssignments(Assignments) {
       newDiv.innerHTML = AssignmentTemplate(_assignment)
       document.getElementById("Art Place").appendChild(newDiv)
     })
-}
+}   
 
-getSubmissions(_index)
-function renderSubmissions(Submissions) {
+
+function renderSubmissions() {
     document.getElementById("Art Place").innerHTML = ""
     Submissions.forEach((_Submission) => {
       const newDiv = document.createElement("div")
@@ -153,9 +153,9 @@ function renderSubmissions(Submissions) {
     })
 }
 
-getWorkers ()
-function renderWorkers(Workers) {
-    document.getElementById("Data Market").innerHTML = ""
+
+function renderWorkers() {
+    document.getElementById("Art Place").innerHTML = ""
     Workers.forEach((_Worker) => {
       const newDiv = document.createElement("div")
       newDiv.className = "col-md-4"
@@ -166,46 +166,46 @@ function renderWorkers(Workers) {
 
 
 
-  function AssignmentTemplate(_product) {
+  function AssignmentTemplate(_assignment) {
     return `
       <div class="card mb-4">
-        <img class="card-img-top" src="${_product.image}" alt="...">
+        <img class="card-img-top" src="${_assignment.image}" alt="...">
         </div>
         <div class="card-body text-left p-4 position-relative">
         <div class="translate-middle-y position-absolute top-0">
-        ${identiconTemplate(_product.Employer)}
+        ${identiconTemplate(_assignment.Employer)}
         </div>
-        <h2 class="card-title fs-4 fw-bold mt-2">${_product.name}</h2>
+        <h2 class="card-title fs-4 fw-bold mt-2">${_assignment.name}</h2>
         <p class="card-text mb-4" style="min-height: 82px">
-          ${_product.Assignmentdescription}             
+          ${_assignment.Assignmentdescription}             
         </p>
         <p class="card-text mt-4">
           <i class="bi bi-geo-alt-fill"></i>
-          <span>${_product.name}</span>
+          <span>${_assignment.name}</span>
         </p>
         <p class="card-text mt-4">
           <i class="bi bi-geo-alt-fill"></i>
-          <span>${_product.BestSubmission}</span>
+          <span>${_assignment.BestSubmission}</span>
         </p>
         <p class="card-text mt-4">
           <i class="bi bi-geo-alt-fill"></i>
-          <span>${_product.BestSubmitter}</span>
+          <span>${_assignment.BestSubmitter}</span>
         </p>
         <p class="card-text mt-4">
           <i class="bi bi-geo-alt-fill"></i>
-          <span> Total Submissions ${_product.SubmissionCount}</span>
+          <span> Total Submissions ${_assignment.SubmissionCount}</span>
         </p>
         <div class="d-grid gap-2">
           <a class="btn btn-lg btn-outline-dark fs-6 p-3" id=${
-            _product.index}
+            _assignment.index}
           data-bs-toggle="modal"
           data-bs-target="#addModal1"
           >
-            Add submission and earn ${_product.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD
+            Add submission and earn ${_assignment.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD
           </a>
         </div><div class="d-grid gap-2">
         <a class="btn btn-lg btn-outline-dark viewsubmissions fs-6 p-3" id=${
-          _product.index}
+          _assignment.index}
         >
           View Submissions 
         </a>
@@ -252,7 +252,7 @@ function SubmissionTemplate(_Submission) {
       <a class="btn btn-lg btn-outline-dark AwardSubmitBtn fs-6 p-3" id=${
         _Submission.AssignmentIndex, _Submission.Subindex}
       >
-      Award Submission ${_product.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD
+      Award Submission ${_assignment.price.shiftedBy(-ERC20_DECIMALS).toFixed(2)} cUSD
       </a>
     </div>
   </div>
@@ -293,9 +293,10 @@ window.addEventListener("load", async () => {
   notification("⌛ Loading...")
   await connectCeloWallet()
   getBalance()
-  renderAssignments()
+  getAssignments()
   notificationOff()
 })
+
 
 document
   .querySelector("#newAssignmentBtn")
@@ -310,24 +311,19 @@ document
     ]
     notification(`⌛ Adding "${params[0]}"...`)
     notification("⌛ Waiting for payment approval...")
-        try {
-          await approve(new BigNumber(document.getElementById("newPrice").value)
-          .shiftedBy(ERC20_DECIMALS)
-          .toString())
-        } catch (error) {
-          notification(`⚠️ ${error}.`)
-        }
-        notification(`⌛ Awaiting payment of prize for "${Assignments[index].name}"...`)
-
     try {
+      await approve(new BigNumber(document.getElementById("newPrice").value)
+      .shiftedBy(ERC20_DECIMALS)
+      .toString())
       const result1 = await contract.methods
         .Addassignment(...params)
         .send({ from: kit.defaultAccount })
-    } catch (error) {
-      notification(`⚠️ ${error}.`)
-    }
-    notification(`🎉 You successfully added "${params[0]}".`)
-    getAssignments()
+      } catch (error) {
+        notification(`⚠️ ${error}.`)
+      }
+      //notification(`⌛ Awaiting payment of prize for "${Assignments[index].name}"...`)
+      notification(`🎉 You successfully added "${params[0]}".`)
+      getAssignments()
   })
 
   document
@@ -367,6 +363,17 @@ document
       notification(`⚠️ ${error}.`)
     }
     notification(`🎉 You successfully added "${params[0]}".`)
+    getWorkers()
+  })
+
+  document
+  .querySelector("#AssignmentRender")
+  .addEventListener("click", async () => {
+    getAssignments()
+  })
+
+  document.querySelector("#WorkerRender")
+  .addEventListener("click", async () => {
     getWorkers()
   })
 
