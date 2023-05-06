@@ -1,4 +1,6 @@
 The workspaces dapp is a simple app for users to get external help from free lancers on their assignments. Its an interesting take on open source
+Demo http://localhost:4001/
+
 
 # Install
 
