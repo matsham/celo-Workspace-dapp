@@ -29,9 +29,9 @@ interface IERC20Token {
 
 contract Work {
     uint internal Workforce = 0;
-    uint internal Assignments = 0;
     uint public platfee;
     address public platowner;
+
 
     address internal cUsdTokenAddress =
         0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
@@ -63,20 +63,29 @@ contract Work {
     mapping(address => bool) internal workers;
     mapping(uint => Worker) internal workforce;
     mapping(uint => Assignment) internal AssignmentsToDo;
+    mapping (address => bool) public workerExists;
+    mapping(address => bool) public workersAdded;
 
-    constructor() {
-        platowner = msg.sender;
-    }
+
+
+    
 
     modifier OnlyOwner() {
         require(msg.sender == platowner);
         _;
     }
 
-    modifier OnlyRegistered() {
-        require(workers[msg.sender], "Worker is not registered.");
-        _;
-    }
+    mapping(address => bool) public isWorker;
+
+modifier OnlyRegistered() {
+  require(isWorker[msg.sender] == true, "Caller is not a registered worker");
+  _;
+}
+
+
+
+
+
 
     modifier OnlyEmployer(uint _index) {
         require(
@@ -87,8 +96,10 @@ contract Work {
     }
 
     function SetPlatFee(uint _newfee) public OnlyOwner {
+        require(_newfee >= 0 && _newfee <= 100, "Fee must be between 0 and 100."); // ensure fee is within reasonable bounds
         platfee = _newfee;
     }
+  
 
     /**
      * @dev Adds a new worker to the contract.
@@ -102,6 +113,9 @@ contract Work {
         string calldata _image,
         string calldata _description
     ) public {
+        require(!workersAdded[msg.sender], "Worker already added");
+        require(isWorker[msg.sender] == false, "Worker already exists");
+
         workforce[Workforce] = Worker(
             payable(msg.sender),
             _name,
@@ -113,6 +127,8 @@ contract Work {
         workers[msg.sender] = true;
         Workforce++;
     }
+
+   
 
     function GetAssignment(
         uint _index
@@ -169,6 +185,7 @@ contract Work {
         uint _index,
         string calldata _submissions
     ) public OnlyRegistered returns (uint) {
+
         uint SubId = AssignmentsToDo[_index].SubmissionCounter;
         submissions[_index][SubId] = _submissions;
         submitterList[_index][SubId] = msg.sender;
@@ -178,6 +195,8 @@ contract Work {
         return (SubId);
     }
 
+
+
     /*
     function Inspect(uint _index) public OnlyEmployer(_index){
         uint NOS = AssignmentsToDo[_index].SubmissionCounter;
@@ -186,9 +205,7 @@ contract Work {
         }
     } */
 
-    function getAssignmentsToDoSize() public view returns (uint) {
-        return (Assignments);
-    }
+    
 
     function getSubmissionsSize(uint _index) public view returns (uint) {
         return (AssignmentsToDo[_index].SubmissionCounter);
@@ -206,9 +223,11 @@ contract Work {
     }
 
     function SetBestSubmission(
+        uint _index ,
         uint _Aindex,
         uint _Sindex
-    ) public returns (string memory, address) {
+    ) public OnlyEmployer(_index)  returns (string memory, address) {
+
         AssignmentsToDo[_Aindex].BestSubmission = submissions[_Aindex][_Sindex];
         AssignmentsToDo[_Aindex].BestSubmitter = payable(
             submitterList[_Aindex][_Sindex]
